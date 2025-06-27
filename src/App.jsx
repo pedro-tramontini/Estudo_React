@@ -17,57 +17,38 @@ const onEachFeature = (prop, layer) => {
   areaAtuacao ? layer.bindPopup(`AREA DE ATUAÇÃO: ${areaAtuacao}`) : layer.bindPopup(`NÃO FAZ PARTE DA AREA DE ATUAÇÃO DA COPREL`) 
 }
 
-const [location, setLocation] = useState({
-  SouthWest: null,
-  NorthEast: null,
-  NorthWest: null,
-  SouthEast: null
-})
+function Componente() {
+    const map = useMap();
 
-// function Componente() {
-//   const map = useMap();
+    map.whenReady(() => {
+      const locations = {
+      SouthWest: map.getBounds().getSouthWest(),
+      NorthEast: map.getBounds().getNorthEast(),
+      NorthWest: map.getBounds().getNorthWest(),
+      SouthEast: map.getBounds().getSouthEast()
+    }
 
-//   useEffect(() => {
-//   setLocation({
-//         SouthWest: map.getBounds().getSouthWest(),
-//         NorthEast: map.getBounds().getNorthEast(),
-//         NorthWest: map.getBounds().getNorthWest(),
-//         SouthEast: map.getBounds().getSouthEast()
-//       })
-//       console.log(location)
-//     }, [])
-
-// }
+      console.log(locations)
+    })
+  return null
+}
 
 
 function LocationResponse() {
   const map = useMap();
   const bounds = map.getBounds();
-  //e.target.getBounds() vai dentro do setLocation
-  // useEffect(() => {
-  // setLocation({
-  //       SouthWest: bounds.getSouthWest(),
-  //       NorthEast: bounds.getNorthEast(),
-  //       NorthWest: bounds.getNorthWest(),
-  //       SouthEast: bounds.getSouthEast()
-  //     })
-  //     console.log(location)
-  //   }, [])
+  useMapEvent('moveend', () => {
+  
+     const locations = {
+      SouthWest: bounds.getSouthWest(),
+      NorthEast: bounds.getNorthEast(),
+      NorthWest: bounds.getNorthWest(),
+      SouthEast: bounds.getSouthEast()
+    }
 
-  useMapEvent({
-    moveend() {
-      setLocation({
-        SouthWest: bounds.getSouthWest(),
-        NorthEast: bounds.getNorthEast(),
-        NorthWest: bounds.getNorthWest(),
-        SouthEast: bounds.getSouthEast()
-      })
-      }
-    }  
+    console.log(locations)
+      }  
   )
-
-
-
     if (location.SouthEast != null) 
     console.log(location)
   }
@@ -120,7 +101,7 @@ return (
       <GeoJSON data={features} onEachFeature={onEachFeature}/>
       {/* <Square center={center} size={10000000} /> */}
       <LocationResponse />
-      {/* <Componente /> */}
+      <Componente />
     </MapContainer>
         </Grid>
   );
