@@ -17,43 +17,40 @@ const onEachFeature = (prop, layer) => {
   areaAtuacao ? layer.bindPopup(`AREA DE ATUAÇÃO: ${areaAtuacao}`) : layer.bindPopup(`NÃO FAZ PARTE DA AREA DE ATUAÇÃO DA COPREL`) 
 }
 
-function Componente() {
-    const map = useMap();
 
-    map.whenReady(() => {
-      const locations = {
-      SouthWest: map.getBounds().getSouthWest(),
-      NorthEast: map.getBounds().getNorthEast(),
-      NorthWest: map.getBounds().getNorthWest(),
-      SouthEast: map.getBounds().getSouthEast()
-    }
-
-      console.log(locations)
-    })
-  return null
+let location = {
+      SouthWest: null,
+      NorthEast: null,
+      NorthWest: null,
+      SouthEast: null
 }
 
-
-function LocationResponse() {
+const LocationResponse = () => {
   const map = useMap();
-  const bounds = map.getBounds();
+
+  map.whenReady(() => {
+    location = {
+    SouthWest: map.getBounds().getSouthWest(),
+    NorthEast: map.getBounds().getNorthEast(),
+    NorthWest: map.getBounds().getNorthWest(),
+    SouthEast: map.getBounds().getSouthEast()
+  }
+    console.log(location)
+    })
+
   useMapEvent('moveend', () => {
-  
-     const locations = {
+    const bounds = map.getBounds()
+    location = {
       SouthWest: bounds.getSouthWest(),
       NorthEast: bounds.getNorthEast(),
       NorthWest: bounds.getNorthWest(),
       SouthEast: bounds.getSouthEast()
     }
-
-    console.log(locations)
-      }  
-  )
-    if (location.SouthEast != null) 
     console.log(location)
-  }
+    })
+  return null
+}
 
-  
 return (
     <Grid sx={{display: 'flex', alignItems: 'center', justifyContent: 'center', marginBlock: 12}}>
 
@@ -99,9 +96,7 @@ return (
       </Marker>
 
       <GeoJSON data={features} onEachFeature={onEachFeature}/>
-      {/* <Square center={center} size={10000000} /> */}
       <LocationResponse />
-      <Componente />
     </MapContainer>
         </Grid>
   );
