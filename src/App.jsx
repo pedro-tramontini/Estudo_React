@@ -1,104 +1,75 @@
-import { useEffect, useState} from 'react';
-import { MapContainer, TileLayer, Marker, Popup, LayersControl, ScaleControl, GeoJSON, useMapEvent, useMap } from 'react-leaflet';
-import { Grid } from '@mui/material';
+import { Box, Button, Checkbox, Grid, Input, TextField, Typography } from '@mui/material';
+import { useState } from 'react';
+import { EventSourcePolyfill } from 'event-source-polyfill';
 
-
-import features from "./vertopal.com_Divisoes_mapa_RS_json.json"
 
 const App = () => {
-  const position = {lng: -53.01521469802669, lat: -28.71292197474028}
 
-
-const onEachFeature = (prop, layer) => {
-  layer.options.fillcolor = prop.properties.color;
+  const [checked, setChecked] = useState(false)
   
-  const areaAtuacao = prop.properties.AREA_ATUACAO;
-  
-  areaAtuacao ? layer.bindPopup(`AREA DE ATUAÇÃO: ${areaAtuacao}`) : layer.bindPopup(`NÃO FAZ PARTE DA AREA DE ATUAÇÃO DA COPREL`) 
-}
-
-
-let location = {
-      SouthWest: null,
-      NorthEast: null,
-      NorthWest: null,
-      SouthEast: null
-}
-
-const LocationResponse = () => {
-  const map = useMap();
-
-  map.whenReady(() => {
-    location = {
-    SouthWest: map.getBounds().getSouthWest(),
-    NorthEast: map.getBounds().getNorthEast(),
-    NorthWest: map.getBounds().getNorthWest(),
-    SouthEast: map.getBounds().getSouthEast()
+  const handleChange = (evento) => {
+    setChecked(!checked)
   }
-    console.log(location)
-    })
+  if (checked) {
+  (async () => {
 
-  useMapEvent('moveend', () => {
-    const bounds = map.getBounds()
-    location = {
-      SouthWest: bounds.getSouthWest(),
-      NorthEast: bounds.getNorthEast(),
-      NorthWest: bounds.getNorthWest(),
-      SouthEast: bounds.getSouthEast()
+    const token = 'eyJhbGciOiJIUzI1NiJ9.eyJtZXJjdXJlIjp7InB1Ymxpc2giOlsiKiJdLCJzdWJzY3JpYmUiOlsiaHR0cHM6Ly9leGFtcGxlLmNvbS9teS1wcml2YXRlLXRvcGljIiwie3NjaGVtZX06Ly97K2hvc3R9L2RlbW8vYm9va3Mve2lkfS5qc29ubGQiLCIvLndlbGwta25vd24vbWVyY3VyZS9zdWJzY3JpcHRpb25zey90b3BpY317L3N1YnNjcmliZXJ9Il0sInBheWxvYWQiOnsidXNlciI6Imh0dHBzOi8vZXhhbXBsZS5jb20vdXNlcnMvZHVuZ2xhcyIsInJlbW90ZUFkZHIiOiIxMjcuMC4wLjEifX19.KKPIikwUzRuB3DTpVw6ajzwSChwFw5omBMmMcWKiDcM'
+    const url = new URL("https://localhost/.well-known/mercure");
+    url.searchParams.append("topic", "https://example.com/my-private-topic");
+
+    const eventSource = new EventSourcePolyfill(url, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    let granted = false;
+    if (Notification.permission === 'granted') {
+      granted = true;
     }
-    console.log(location)
-    })
-  return null
-}
+  
+    if (Notification.permission !== 'denied') {
+      const permission = await Notification.requestPermission()
+      console.log(permission)
+      granted = permission === 'granted' ? true : false;
+    }
+
+    if (granted) {
+    eventSource.onmessage = (e) => {
+      let ultimoId = e.lastEventId
+
+      new Notification('Notificando o usuário', {
+        body: `${e.data}`
+      })
+    };
+    }
+    })()
+  }
+
+    const registerSw = async () => {
+    const registration = await navigator.serviceWorker.register('sw.js');
+    return registration
+  }
+
+    const main = async () => {
+    await registerSw()
+  }
 
 return (
-    <Grid sx={{display: 'flex', alignItems: 'center', justifyContent: 'center', marginBlock: 12}}>
+  <Box >
+    <form>
+      <Typography>Mensagem</Typography>
+      <TextField id='outlined_basic' label="Mensagem" variant='outlined'/>
+      <Button variant='contained'>Enviar</Button>
 
-
-    <MapContainer center={position} zoom={13} scrollWheelZoom={true} style={{display: 'flex', alignItems: 'center',justifyContent: 'center', height: "70vh", width: "60%", borderRadius: "15px"}}>
-      <ScaleControl position={'bottomright'}/>
-      <TileLayer
-        url='https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}'
-        maxZoom= {20}
-        subdomains={['mt1','mt2','mt3']}
+      <Typography>Você deseja receber notificações push?</Typography>
+      <Button onClick={main}>Register Service Worker</Button>
+      <Checkbox
+        checked={checked}
+        onChange={handleChange}
       />
-
-        <LayersControl>
-          <LayersControl.BaseLayer name="OpenStreetMap">
-                    <TileLayer
-                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                        attribution="&copy; OpenStreetMap contributors"
-                    />
-                </LayersControl.BaseLayer>
-
-                <LayersControl.BaseLayer checked name="Google Maps">
-                    <TileLayer
-                        url="http://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}"
-                        attribution="&copy; Google"
-                    />
-                </LayersControl.BaseLayer>
-
-                <LayersControl.BaseLayer name="Mapbox Map Satellite">
-            <TileLayer
-              attribution='&copy; <a href="https://www.mapbox.com">Mapbox</a> '
-              url="https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v11/tiles/{z}/{x}/{y}?access_token={accessToken}"
-              accessToken={"your token here"}
-
-            />
-          </LayersControl.BaseLayer>
-          
-        </LayersControl>
-
-      <Marker position={[51.505, -0.09]}>
-        <Popup>
-          A pretty CSS3 popup. <br /> Easily customizable.
-        </Popup>
-      </Marker>
-
-      <GeoJSON data={features} onEachFeature={onEachFeature}/>
-      <LocationResponse />
-    </MapContainer>
-        </Grid>
+    </form>
+  </Box>
   );
 };
 
